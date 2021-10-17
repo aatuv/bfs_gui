@@ -1,5 +1,5 @@
-from gui import Gui
+from bfsGui import BFSGui
 
-gui = Gui(1000, 1000)
+gui = BFSGui(1000, 1000)
 
-gui.setup(m_size=[20, 20])
+gui.setup(m_size=[5, 5])
