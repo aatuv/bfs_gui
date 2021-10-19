@@ -1,3 +1,4 @@
+import sys
 from tkinter import *
 from entryState import EntryState
 from graph import Graph
@@ -30,7 +31,7 @@ class BFSGui:
             for i in range(len(self.__matrix)):
                 for j in range(len(self.__matrix[i])):
                     if draggedId in self.__matrix[i][j]:
-                        self.__matrix[i][j][draggedId] = 1
+                        self.__matrix[i][j][draggedId] = EntryState.OBSTACLE
         
 
         def onRightClick(event):
@@ -87,24 +88,58 @@ class BFSGui:
                 self.__matrix[i][j] = {rect_id: EntryState.EMPTY}
                 x_pos += rect_width
             y_pos += rect_height
+    
+    def entryValue(self, entry):
+        return next(iter(entry.values()))
+    
+    def entryKey(self, entry):
+        return next(iter(entry.keys()))
 
     def __start(self):
-        # Todo: continue from here
         connections = []
-        graph = Graph()
+        print(self.__matrix[0])
+        # we need to convert current matrix to a graph.
+        for i in range(len(self.__matrix)):
+            # last row is special case: it has no successor.
+            if i == len(self.__matrix) - 1:
+                for j in range(len(self.__matrix[i])):
+                    if j < len(self.__matrix[i]) - 1:
+                        # there should be an edge between this and next entry on the same row.
+                        if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i][j + 1]) != EntryState.OBSTACLE:
+                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i][j + 1])))
+            # default case: row has successor.
+            else:
+                for j in range(len(self.__matrix[i])):
+                    if j == len(self.__matrix[i]) - 1:
+                        # there should be an edge between this and the entry on the next row.
+                        if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i + 1][j]) != EntryState.OBSTACLE:
+                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i + 1][j])))
+                    else:
+                        # there should be an edge between this and next entry on the same row.
+                        if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i][j + 1]) != EntryState.OBSTACLE:
+                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i][j + 1])))
+                        # there should be an edge between this and the entry on the next row.
+                        if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i + 1][j]) != EntryState.OBSTACLE:
+                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i + 1][j])))
+        graph = Graph(connections)
         print(graph)
 
     def setup(self, m_size=[10, 10]): # m_size : size of matrix [Rows x Columns]
-        self.__matrix = [[0 for i in range(m_size[0])] for j in range(m_size[1])]
-        self.__canvas.pack()
-        self.__canvas.bind("<Configure>", self.__create_grid)
-        menubar = Menu(self.__root)
-        filemenu = Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Start", command=self.__start)
-        filemenu.add_separator()
-        filemenu.add_command(label="Exit", command=self.__root.destroy)
-        menubar.add_cascade(label="File", menu=filemenu)
-        self.__root.config(menu=menubar)
-        self.__root.mainloop()
-        
+        try:
+            if m_size[0] < 4 or m_size[1] < 4:
+                raise ValueError("Grid can't be smaller than 4x4!")
+            self.__matrix = [[0 for i in range(m_size[0])] for j in range(m_size[1])]
+            self.__canvas.pack()
+            self.__canvas.bind("<Configure>", self.__create_grid)
+            menubar = Menu(self.__root)
+            filemenu = Menu(menubar, tearoff=0)
+            filemenu.add_command(label="Start", command=self.__start)
+            filemenu.add_separator()
+            filemenu.add_command(label="Exit", command=self.__root.destroy)
+            menubar.add_cascade(label="File", menu=filemenu)
+            self.__root.config(menu=menubar)
+            self.__root.mainloop()
+        except ValueError as e:
+            print(e)
+            sys.exit(1)
 
