@@ -1,8 +1,8 @@
 import sys
 from tkinter import *
 from entryState import EntryState
-from graph import Graph
-
+from graph import Graph, Node
+from queue import Queue
 class BFSGui:
 
     def __init__(self, width, height):
@@ -13,6 +13,8 @@ class BFSGui:
         self.__root = Tk()
         self.__root.resizable(False, False)
         self.__canvas = Canvas(self.__root, height = height, width = width, bg="white")
+        self.__startNodeId = None
+        self.__targetNodeId = None
         self.startCallback = None
     
     def __create_grid(self, event=None):
@@ -70,11 +72,13 @@ class BFSGui:
                         if self.__stage == 0:
                             if self.__matrix[i][j][clickedId] == EntryState.EMPTY:
                                 self.__matrix[i][j][clickedId] = EntryState.START
+                                self.__startNodeId = clickedId
                                 event.widget.itemconfigure(clickedId, fill="#ff0000")
                                 self.__stage = 1
                         elif self.__stage == 1:
                             if self.__matrix[i][j][clickedId] == EntryState.EMPTY:
                                 self.__matrix[i][j][clickedId] = EntryState.TARGET
+                                self.__targetNodeId = clickedId
                                 event.widget.itemconfigure(clickedId, fill="#00ff00")
                                 self.__stage = 0
                         
@@ -95,6 +99,22 @@ class BFSGui:
     def entryKey(self, entry):
         return next(iter(entry.keys()))
 
+    def bfs(self, graphObject):
+        queue = Queue()
+        graph = graphObject.getGraph()
+        graphObject.setNodeVisited(self.__startNodeId)
+        self.__canvas.itemconfigure(self.__startNodeId, fill="#5f5f5f")
+        queue.enqueue(self.__startNodeId)
+        while queue.isEmpty() == False:
+            v = queue.dequeue()
+            if v == self.__targetNodeId:
+                return v
+            for edge in graph[v]:
+                if graphObject.getNode(edge.node).visited == False:
+                    graphObject.setNodeVisited(edge.node)
+                    self.__canvas.itemconfigure(edge.node, fill="#5f5f5f")
+                    queue.enqueue(edge.node)
+
     def __start(self):
         connections = []
         print(self.__matrix[0])
@@ -106,23 +126,23 @@ class BFSGui:
                     if j < len(self.__matrix[i]) - 1:
                         # there should be an edge between this and next entry on the same row.
                         if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i][j + 1]) != EntryState.OBSTACLE:
-                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i][j + 1])))
+                            connections.append((Node(self.entryKey(self.__matrix[i][j])), Node(self.entryKey(self.__matrix[i][j + 1]))))
             # default case: row has successor.
             else:
                 for j in range(len(self.__matrix[i])):
                     if j == len(self.__matrix[i]) - 1:
                         # there should be an edge between this and the entry on the next row.
                         if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i + 1][j]) != EntryState.OBSTACLE:
-                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i + 1][j])))
+                            connections.append((Node(self.entryKey(self.__matrix[i][j])), Node(self.entryKey(self.__matrix[i + 1][j]))))
                     else:
                         # there should be an edge between this and next entry on the same row.
                         if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i][j + 1]) != EntryState.OBSTACLE:
-                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i][j + 1])))
+                            connections.append((Node(self.entryKey(self.__matrix[i][j])), Node(self.entryKey(self.__matrix[i][j + 1]))))
                         # there should be an edge between this and the entry on the next row.
                         if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i + 1][j]) != EntryState.OBSTACLE:
-                            connections.append((self.entryKey(self.__matrix[i][j]), self.entryKey(self.__matrix[i + 1][j])))
+                            connections.append((Node(self.entryKey(self.__matrix[i][j])), Node(self.entryKey(self.__matrix[i + 1][j]))))
         graph = Graph(connections)
-        print(graph)
+        self.bfs(graph)
 
     def setup(self, m_size=[10, 10]): # m_size : size of matrix [Rows x Columns]
         try:
