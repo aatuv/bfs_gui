@@ -3,11 +3,8 @@ A program for interactively visualizing the breadth-first search (BFS) algorithm
 
 ### The algorithm
 ### TODO:
-- Implement the basic BFS algorithm
-- Figure out the best way how the algorithm could work with the resulting matrix from the user's drawing
+- Retrace the found path
 
 ### The UI
 #### TODO:
-- Add function for resetting drawing of obstacles
-- Add function for adding a target node
-- Add function for starting the BFS algorithm
+- Visualize the retraced path from the bfs algorithm
