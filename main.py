@@ -2,4 +2,4 @@ from bfsGui import BFSGui
 
 gui = BFSGui(1000, 1000)
 
-gui.setup(m_size=[30, 30])
+gui.setup(m_size=[50, 50])

@@ -3,6 +3,7 @@ from tkinter import *
 from entryState import EntryState
 from graph import Graph, Node
 from queue import Queue
+from time import sleep
 class BFSGui:
 
     def __init__(self, width, height):
@@ -99,25 +100,42 @@ class BFSGui:
     def entryKey(self, entry):
         return next(iter(entry.keys()))
 
+    def visualizePath(self, path):
+        for node in path:
+            self.__canvas.itemconfigure(node, fill="#1aff00")
+            sleep(0.01)
+            self.__root.update()
+
     def bfs(self, graphObject):
         queue = Queue()
         graph = graphObject.getGraph()
+        currentPath = {}
         graphObject.setNodeVisited(self.__startNodeId)
-        self.__canvas.itemconfigure(self.__startNodeId, fill="#5f5f5f")
+        self.__canvas.itemconfigure(self.__startNodeId, fill="#77917c")
         queue.enqueue(self.__startNodeId)
+
+        def backtrace(parent, start, end):
+            path = [end]
+            while path[-1] != start:
+                path.append(parent[path[-1]])
+            return path
+
         while queue.isEmpty() == False:
             v = queue.dequeue()
+            self.__canvas.itemconfigure(v, fill="#5f5f5f")
             if v == self.__targetNodeId:
-                return v
+                return backtrace(currentPath, self.__startNodeId, v)
             for edge in graph[v]:
                 if graphObject.getNode(edge.node).visited == False:
                     graphObject.setNodeVisited(edge.node)
-                    self.__canvas.itemconfigure(edge.node, fill="#5f5f5f")
+                    currentPath[edge.node] = v
+                    self.__canvas.itemconfigure(edge.node, fill="#bdb720")
                     queue.enqueue(edge.node)
+            sleep(0.01)
+            self.__root.update()
 
     def __start(self):
         connections = []
-        print(self.__matrix[0])
         # we need to convert current matrix to a graph.
         for i in range(len(self.__matrix)):
             # last row is special case: it has no successor.
@@ -142,7 +160,8 @@ class BFSGui:
                         if self.entryValue(self.__matrix[i][j]) != EntryState.OBSTACLE and self.entryValue(self.__matrix[i + 1][j]) != EntryState.OBSTACLE:
                             connections.append((Node(self.entryKey(self.__matrix[i][j])), Node(self.entryKey(self.__matrix[i + 1][j]))))
         graph = Graph(connections)
-        self.bfs(graph)
+        optimalPath = self.bfs(graph)
+        self.visualizePath(optimalPath)
 
     def setup(self, m_size=[10, 10]): # m_size : size of matrix [Rows x Columns]
         try:
@@ -160,6 +179,5 @@ class BFSGui:
             self.__root.config(menu=menubar)
             self.__root.mainloop()
         except ValueError as e:
-            print(e)
             sys.exit(1)
 
